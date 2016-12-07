@@ -559,7 +559,19 @@ def compute_accuracy(xs,ys,X,y,sess,prediction):
 - 采用TensorFlow中的mnist数据集（可以取网站下载它的数据集，http://yann.lecun.com/exdb/mnist/）
 - 实现代码与上面类似，它有专门的测试集
 
-### 2、
+### 2、代码
+- 随机梯度下降`SGD`,每次选出`100`个数据进行训练
+```
+for i in range(2000):
+        batch_xs, batch_ys = minist.train.next_batch(100)
+        sess.run(train_step,feed_dict={xs:batch_xs,ys:batch_ys})
+        if i%50==0:
+            print(compute_accuracy(xs,ys,minist.test.images, minist.test.labels,sess,prediction))
+      
+```
+- 输出每一次预测的结果准确度     
+![enter description here][10]
+
 
   [1]: ./images/tensors_flowing.gif "tensors_flowing.gif"
   [2]: ./images/example_01.png "example_01.png"
@@ -570,3 +582,4 @@ def compute_accuracy(xs,ys,X,y,sess,prediction):
   [7]: ./images/tensorboard_04.png "tensorboard_04.png"
   [8]: ./images/tensorboard_05.png "tensorboard_05.png"
   [9]: ./images/Mnist_01.png "Mnist_01.png"
+  [10]: ./images/Mnist_02.png "Mnist_02.png"
