@@ -488,7 +488,7 @@ writer = tf.train.SummaryWriter("logs/", sess.graph)
 
 ## 五、手写数字识别_1
 ### 1、说明
-- [全部代码](https://github.com/lawlite19/MachineLearning_TensorFlow\Mnist_01\minist.py)：`https://github.com/lawlite19/MachineLearning_TensorFlow\Mnist_01\minist.py`
+- [全部代码](https://github.com/lawlite19/MachineLearning_TensorFlow/Mnist_01/minist.py)：`https://github.com/lawlite19/MachineLearning_TensorFlow\Mnist_01\minist.py`
 - 自己的数据集，没有使用tensorflow中mnist数据集，
 - 之前在机器学习中用Python实现过，地址：`https://github.com/lawlite19/MachineLearning_Python`,这里使用`tensorflow`实现
 - 神经网络只有两层
@@ -555,7 +555,7 @@ def compute_accuracy(xs,ys,X,y,sess,prediction):
 
 ## 六、手写数字识别_2
 ### 1、说明
-- [全部代码](https://github.com/lawlite19/MachineLearning_TensorFlow\Mnist_02\minist.py)：`https://github.com/lawlite19/MachineLearning_TensorFlow\Mnist_02\minist.py`
+- [全部代码](https://github.com/lawlite19/MachineLearning_TensorFlow/Mnist_02/minist.py)：`https://github.com/lawlite19/MachineLearning_TensorFlow\Mnist_02\minist.py`
 - 采用TensorFlow中的mnist数据集（可以取网站下载它的数据集，http://yann.lecun.com/exdb/mnist/）
 - 实现代码与上面类似，它有专门的测试集
 
