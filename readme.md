@@ -550,11 +550,16 @@ def compute_accuracy(xs,ys,X,y,sess,prediction):
     result = sess.run(accuracy,feed_dict={xs:X,ys:y})
     return result  
 ```
+- 输出每一次预测的结果准确度    
+![enter description here][9]
 
+## 六、手写数字识别_2
+### 1、说明
+- [全部代码](https://github.com/lawlite19/MachineLearning_TensorFlow\Mnist_02\minist.py)：`https://github.com/lawlite19/MachineLearning_TensorFlow\Mnist_02\minist.py`
+- 采用TensorFlow中的mnist数据集（可以取网站下载它的数据集，http://yann.lecun.com/exdb/mnist/）
+- 实现代码与上面类似，它有专门的测试集
 
-
-
-
+### 2、
 
   [1]: ./images/tensors_flowing.gif "tensors_flowing.gif"
   [2]: ./images/example_01.png "example_01.png"
@@ -564,3 +569,4 @@ def compute_accuracy(xs,ys,X,y,sess,prediction):
   [6]: ./images/tensorboard_03.png "tensorboard_03.png"
   [7]: ./images/tensorboard_04.png "tensorboard_04.png"
   [8]: ./images/tensorboard_05.png "tensorboard_05.png"
+  [9]: ./images/Mnist_01.png "Mnist_01.png"
