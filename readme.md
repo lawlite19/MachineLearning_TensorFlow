@@ -244,7 +244,7 @@ TensorFlow
  ```
  
 
-### 3、Session回话控制
+### 3、Session会话控制
 - 运行 `session.run()` 可以获得你要得知的运算结果, 或者是你所要运算的部分
 - 定义常量矩阵：`tf.constant([[3,3]])`
 - 矩阵乘法 ：`tf.matmul(matrix1,matrix2)`
