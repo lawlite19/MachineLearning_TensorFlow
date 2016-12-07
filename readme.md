@@ -486,6 +486,14 @@ writer = tf.train.SummaryWriter("logs/", sess.graph)
  - 添加：`tf.scalar_summary('loss',loss)`    
  ![enter description here][8]
 
+## 五、手写数字识别_1
+### 1、说明
+- [全部代码](https://github.com/lawlite19/MachineLearning_TensorFlow\Mnist_01\minist.py)：`https://github.com/lawlite19/MachineLearning_TensorFlow\Mnist_01\minist.py`
+- 自己的数据集，没有使用tensorflow中mnist数据集，
+- 之前在机器学习中用Python实现过，地址：`https://github.com/lawlite19/MachineLearning_Python`,这里使用`tensorflow`实现
+
+### 2、代码实现
+- 
 
 
 
