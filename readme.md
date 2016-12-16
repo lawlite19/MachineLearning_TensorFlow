@@ -581,6 +581,8 @@ for i in range(2000):
 
 ### 2、代码实现
 - 权重和偏置初始化函数
+ - 权重使用的`truncated_normal`进行初始化,`stddev`标准差定义为0.1
+ - 偏置初始化为常量0.1
 ```
 '''权重初始化函数'''
 def weight_variable(shape):
@@ -592,31 +594,30 @@ def bias_variable(shape):
     inital = tf.constant(0.1,shape=shape)  # 偏置定义为常量
     return tf.Variable(inital)
 ```
- - 权重使用的`truncated_normal`进行初始化,`stddev`标准差定义为0.1
- - 偏置初始化为常量0.1
 
 - 卷积函数
+ - `strides[0]`和`strides[3]`的两个1是默认值，中间两个1代表padding时在x方向运动1步，y方向运动1步
+ - `padding='SAME'`代表经过卷积之后的输出图像和原图像大小一样
 ```
 '''卷积函数'''
 def conv2d(x,W):#x是图片的所有参数，W是此卷积层的权重
     return tf.nn.conv2d(x,W,strides=[1,1,1,1],padding='SAME')#strides[0]和strides[3]的两个1是默认值，中间两个1代表padding时在x方向运动1步，y方向运动1步
 ```
- - `strides[0]`和`strides[3]`的两个1是默认值，中间两个1代表padding时在x方向运动1步，y方向运动1步
- - `padding='SAME'`代表经过卷积之后的输出图像和原图像大小一样
 
 
 - 池化函数
+ - `ksize`指定池化核函数的大小
+ - 根据池化核函数的大小定义`strides`的大小
 ```
 '''池化函数'''
 def max_pool_2x2(x):
     return tf.nn.max_pool(x,ksize=[1,2,2,1],
                           strides=[1,2,2,1],                          padding='SAME')#池化的核函数大小为2x2，因此ksize=[1,2,2,1]，步长为2，因此strides=[1,2,2,1]
 ```
- - `ksize`指定池化核函数的大小
- - 根据池化核函数的大小定义`strides`的大小
-
 
 - 加载`mnist`数据和定义`placeholder`
+ - 输入数据`x_image`最后一个`1`代表`channel`的数量,若是`RGB`3个颜色通道就定义为3
+ - `keep_prob` 用于**dropout**防止过拟合
 ```
     mnist = input_data.read_data_sets('MNIST_data', one_hot=True)  # 下载数据
     
@@ -626,10 +627,9 @@ def max_pool_2x2(x):
     x_image = tf.reshape(xs,[-1,28,28,1])       #-1代表先不考虑输入的图片例子多少这个维度，后面的1是channel的数量，因为我们输入的图片是黑白的，因此channel是1，例如如果是RGB图像，那么channel就是3
 
 ```
- - 输入数据`x_image`最后一个`1`代表`channel`的数量,若是`RGB`3个颜色通道就定义为3
- - `keep_prob` 用于**dropout**防止过拟合
 
 - 第一层卷积和池化
+  - 使用**ReLu**激活函数
 ```
     '''第一层卷积，池化'''
     W_conv1 = weight_variable([5,5,1,32])  # 卷积核定义为5x5,1是输入的通道数目，32是输出的通道数目
@@ -637,7 +637,6 @@ def max_pool_2x2(x):
     h_conv1 = tf.nn.relu(conv2d(x_image,W_conv1)+b_conv1) # 卷积运算，并使用ReLu激活函数激活
     h_pool1 = max_pool_2x2(h_conv1)        # pooling操作 
 ```
- - 使用**ReLu**激活函数
 
 
 - 第二层卷积和池化
@@ -667,7 +666,8 @@ def max_pool_2x2(x):
 ```
 
 
-- 最后一层全连接预测,使用梯度下降优化交叉熵损失函数
+- 最后一层全连接预测,使用梯度下降优化**交叉熵损失函数**
+ - 使用**softmax**分类器分类
 ```
     '''最后一层全连接'''
     W_fc2 = weight_variable([1024,10])                # 最后一层权重初始化
@@ -677,7 +677,7 @@ def max_pool_2x2(x):
     cross_entropy = tf.reduce_mean(-tf.reduce_sum(ys*tf.log(prediction),reduction_indices=[1]))  # 交叉熵损失函数来定义cost function
     train_step = tf.train.AdamOptimizer(1e-3).minimize(cross_entropy)  # 调用梯度下降
 ```
- - 使用**softmax**分类器分类
+
 
 - 定义Session，使用`SGD`训练
 ```
@@ -693,6 +693,7 @@ def max_pool_2x2(x):
 
 ```
 - 计算准确度函数
+  - 和上面的两个计算准确度的函数一致，就是多了个**dropout**的参数`keep_prob`
 ```
 '''计算准确度函数'''
 def compute_accuracy(xs,ys,X,y,keep_prob,sess,prediction):
@@ -702,7 +703,7 @@ def compute_accuracy(xs,ys,X,y,keep_prob,sess,prediction):
     result = sess.run(accuracy,feed_dict={xs:X,ys:y,keep_prob:1.0})
     return result 
 ```
- - 和上面的两个计算准确度的函数一致，就是多了个**dropout**的参数`keep_prob`
+
 
 ### 3、运行结果
 - 测试集上准确度   
