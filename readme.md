@@ -704,13 +704,49 @@ def compute_accuracy(xs,ys,X,y,keep_prob,sess,prediction):
     return result 
 ```
 
-
 ### 3、运行结果
 - 测试集上准确度   
 ![enter description here][11]   
 - 使用`top`命令查看占用的CPU和内存，还是很消耗CPU和内存的，所以上面只输出了四次我就终止了
 ![enter description here][12]   
 - 由于我在虚拟机里运行的`TensorFlow`程序，分配了`5G`的内存，若是内存不够会报一个错误。
+
+-------------------------------------------------------------
+
+## 八、保存和提取神经网络
+### 1、保存
+- 定义要保存的数据
+```
+W = tf.Variable(initial_value=[[1,2,3],[3,4,5]], 
+               name='weights', dtype=tf.float32)   # 注意需要指定name和dtype
+b = tf.Variable(initial_value=[1,2,3], 
+               name='biases', dtype=tf.float32)
+init = tf.initialize_all_variables()
+```
+- 保存
+```
+saver = tf.train.Saver()
+with tf.Session() as sess:
+    sess.run(init)
+    save_path = saver.save(sess, 'my_network/save_net.ckpt') # 保存目录，注意要在当前项目下建立my_network的目录
+    print ('保存到 :',save_path)
+```
+### 2、提取
+- 定义数据
+```
+W = tf.Variable(np.arange(6).reshape((2,3)), 
+               name='weights', dtype=tf.float32) # 注意与之前保存的一致
+b = tf.Variable(np.arange((3)), 
+               name='biases', dtype=tf.float32)
+```
+- `restore`提取
+```
+saver = tf.train.Saver() 
+with tf.Session() as sess:
+    saver.restore(sess,'my_network/save_net.ckpt')  
+    print('weights:',sess.run(W))  # 输出一下结果
+    print('biases:',sess.run(b))
+```
 
 
   [1]: ./images/tensors_flowing.gif "tensors_flowing.gif"
