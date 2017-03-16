@@ -73,7 +73,7 @@ def cnn():
         batch_xs, batch_ys = mnist.train.next_batch(100)  # 使用SGD，每次选取100个数据训练
         sess.run(train_step, feed_dict={xs: batch_xs, ys: batch_ys, keep_prob: 0.5})  # dropout值定义为0.5
         if i % 50 == 0:
-            print compute_accuracy(xs,ys,mnist.test.images, mnist.test.labels,keep_prob,sess,prediction)  # 每50次输出一下准确度
+            print(compute_accuracy(xs,ys,mnist.test.images, mnist.test.labels,keep_prob,sess,prediction))  # 每50次输出一下准确度
             
             
 if __name__ == '__main__':

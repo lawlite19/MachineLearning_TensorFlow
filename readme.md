@@ -183,6 +183,8 @@ TensorFlow
 
 - 运行还可能报错编码的问题，这里安装`0.10.0`版本:`pip install --upgrade https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.10.0rc0-cp27-none-linux_x86_64.whl`
 
+- 安装`pandas`
+ - `pip install pandas`没有问题
 
 ## 二、TensorFlow基础架构
 
