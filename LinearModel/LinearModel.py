@@ -29,7 +29,7 @@ def plot_images(images, cls_true, cls_pred = None):
     assert len(images) == len(cls_true) == 9  # only show 9 images
     fig, axes = plt.subplots(nrows=3, ncols=3)
     for i, ax in enumerate(axes.flat):
-        ax.imshow(images[i].reshape(img_shape), cmap="binary")
+        ax.imshow(images[i].reshape(img_shape), cmap="binary")  # binary means black_white image
         # show the true and pred values
         if cls_pred is None:
             xlabel = "True: {0}".format(cls_true[i])
@@ -57,7 +57,7 @@ biases = tf.Variable(tf.zeros([num_classes]))
 logits = tf.matmul(X,weights) + biases 
 y_pred = tf.nn.softmax(logits)
 y_pred_cls = tf.argmax(y_pred, dimension=1)
-cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true, 
+cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=y_true, 
                                                        logits=logits)
 cost = tf.reduce_mean(cross_entropy)
 '''define the optimizer'''
