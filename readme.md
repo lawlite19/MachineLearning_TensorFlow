@@ -750,6 +750,191 @@ with tf.Session() as sess:
     print('biases:',sess.run(b))
 ```
 
+-------------------------------------------------
+
+#### 以下来自tensorflow-turorial
+
+
+## 九、线性模型Linear Model
+- 使用`MNIST`数据集
+
+### 1、加载MNIST数据集，并输出信息
+
+``` stylus
+'''Load MNIST data and print some information'''
+data = input_data.read_data_sets("MNIST_data", one_hot = True)
+print("Size of:")
+print("\t training-set:\t\t{}".format(len(data.train.labels)))
+print("\t test-set:\t\t\t{}".format(len(data.test.labels)))
+print("\t validation-set:\t{}".format(len(data.validation.labels)))
+print(data.test.labels[0:5])
+data.test.cls = np.array([label.argmax() for label in data.test.labels])   # get the actual value
+print(data.test.cls[0:5])
+```
+
+### 2、绘制9张图像
+- 实现函数
+``` stylus
+'''define a funciton to plot 9 images'''
+def plot_images(images, cls_true, cls_pred = None):
+    '''
+    @parameter images:   the images info
+    @parameter cls_true: the true value of image
+    @parameter cls_pred: the prediction value, default is None
+    '''
+    assert len(images) == len(cls_true) == 9  # only show 9 images
+    fig, axes = plt.subplots(nrows=3, ncols=3)
+    for i, ax in enumerate(axes.flat):
+        ax.imshow(images[i].reshape(img_shape), cmap="binary")  # binary means black_white image
+        # show the true and pred values
+        if cls_pred is None:
+            xlabel = "True: {0}".format(cls_true[i])
+        else:
+            xlabel = "True: {0},Pred: {1}".format(cls_true[i],cls_pred[i])
+        ax.set_xlabel(xlabel)
+        ax.set_xticks([])  # remove the ticks
+        ax.set_yticks([])
+    plt.show()
+```
+- 选择测试集中的9张图显示
+
+``` stylus
+'''show 9 images'''
+images = data.test.images[0:9]
+cls_true = data.test.cls[0:9]
+plot_images(images, cls_true)
+```
+![enter description here][13]
+
+### 3、定义要训练的模型
+- 定义`placeholder`
+``` stylus
+'''define the placeholder'''
+X = tf.placeholder(tf.float32, [None, img_size_flat])    # None means the arbitrary number of labels, the features size is img_size_flat 
+y_true = tf.placeholder(tf.float32, [None, num_classes]) # output size is num_classes
+y_true_cls = tf.placeholder(tf.int64, [None])
+```
+- 定义`weights`和`biases`
+
+``` stylus
+'''define weights and biases'''
+weights = tf.Variable(tf.zeros([img_size_flat, num_classes]))  # img_size_flat*num_classes
+biases = tf.Variable(tf.zeros([num_classes]))
+```
+- 定义模型
+
+``` stylus
+'''define the model'''
+logits = tf.matmul(X,weights) + biases 
+y_pred = tf.nn.softmax(logits)
+y_pred_cls = tf.argmax(y_pred, dimension=1)
+cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=y_true, 
+                                                       logits=logits)
+cost = tf.reduce_mean(cross_entropy)
+'''define the optimizer'''
+optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.5).minimize(cost)
+
+```
+- 定义求准确度
+
+``` stylus
+'''define the accuracy'''
+correct_prediction = tf.equal(y_pred_cls, y_true_cls)
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+```
+- 定义`session`
+
+``` stylus
+'''run the datagraph and use batch gradient descent'''
+session = tf.Session()
+session.run(tf.global_variables_initializer())
+batch_size = 100
+```
+### 4、定义函数`optimize`进行bgd训练
+
+``` stylus
+'''define a function to run the optimizer'''
+def optimize(num_iterations):
+    '''
+    @parameter num_iterations: the traning times
+    '''
+    for i in range(num_iterations):
+        x_batch, y_true_batch = data.train.next_batch(batch_size)
+        feed_dict_train = {X: x_batch,y_true: y_true_batch}
+        session.run(optimizer, feed_dict=feed_dict_train)
+
+```
+### 5、定义输出准确度的函数
+- 代码
+``` stylus
+feed_dict_test = {X: data.test.images, 
+                  y_true: data.test.labels, 
+                  y_true_cls: data.test.cls}        
+'''define a function to print the accuracy'''    
+def print_accuracy():
+    acc = session.run(accuracy, feed_dict=feed_dict_test)
+    print("Accuracy on test-set:{0:.1%}".format(acc))
+```
+- 输出：`Accuracy on test-set:89.4%`
+
+### 6、定义绘制错误预测的图片函数
+- 代码
+``` stylus
+'''define a function to plot the error prediciton'''    
+def plot_example_errors():
+    correct, cls_pred = session.run([correct_prediction, y_pred_cls], feed_dict=feed_dict_test) 
+    incorrect = (correct == False)
+    images = data.test.images[incorrect]  # get the prediction error images
+    cls_pred = cls_pred[incorrect]        # get prediction value
+    cls_true = data.test.cls[incorrect]   # get true value
+    plot_images(images[0:9], cls_true[0:9], cls_pred[0:9])
+```
+- 输出：
+![enter description here][14]
+### 7、定义可视化权重的函数
+- 代码
+``` stylus
+'''define a fucntion to plot weights'''
+def plot_weights():
+    w = session.run(weights)
+    w_min = np.min(w)
+    w_max = np.max(w)
+    fig, axes = plt.subplots(3, 4)
+    fig.subplots_adjust(0.3, 0.3)
+    for i, ax in enumerate(axes.flat):
+        if i<10:
+            image = w[:,i].reshape(img_shape)
+            ax.set_xlabel("Weights: {0}".format(i))
+            ax.imshow(image, vmin=w_min,vmax=w_max,cmap="seismic")
+        ax.set_xticks([])
+        ax.set_yticks([])
+    plt.show()
+```
+- 输出：
+![enter description here][15]
+### 8、定义输出`confusion_matrix`的函数
+- 代码：
+``` stylus
+'''define a function to printand plot the confusion matrix using scikit-learn.'''   
+def print_confusion_martix():
+    cls_true = data.test.cls  # test set actual value 
+    cls_pred = session.run(y_pred_cls, feed_dict=feed_dict_test)  # test set predict value
+    cm = confusion_matrix(y_true=cls_true,y_pred=cls_pred)        # use sklearn confusion_matrix
+    print(cm)
+    plt.imshow(cm, interpolation='nearest',cmap=plt.cm.Blues) # Plot the confusion matrix as an image.
+    plt.tight_layout()
+    plt.colorbar()
+    tick_marks = np.arange(num_classes)
+    tick_marks = np.arange(num_classes)
+    plt.xticks(tick_marks, range(num_classes))
+    plt.yticks(tick_marks, range(num_classes))
+    plt.xlabel('Predicted')
+    plt.ylabel('True')    
+    plt.show()
+```
+- 输出：
+![enter description here][16]
+
 
   [1]: ./images/tensors_flowing.gif "tensors_flowing.gif"
   [2]: ./images/example_01.png "example_01.png"
@@ -763,3 +948,7 @@ with tf.Session() as sess:
   [10]: ./images/Mnist_02.png "Mnist_02.png"
   [11]: ./images/cnn_mnist_02.png "cnn_mnist_02.png"
   [12]: ./images/cnn_mnist_01.png "cnn_mnist_01.png"
+  [13]: ./images/LinearModel_01.png "LinearModel_01"
+  [14]: ./images/LinearModel_02.png "LinearModel_02"
+  [15]: ./images/LinearModel_03.png "LinearModel_03"
+  [16]: ./images/LinearModel_04.png "LinearModel_04"
