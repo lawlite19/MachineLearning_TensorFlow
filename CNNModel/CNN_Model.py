@@ -204,7 +204,7 @@ def print_test_accuracy(print_error=False,print_confusion_matrix=False):
         cls_pred[i:j] = session.run(y_pred_cls,feed_dict=feed_dict)
         i = j
     cls_true = data.test.cls
-    correct = (cls_true == cls_pred)  # or np.equal(cls_true, cls_pred)
+    correct = (cls_true == cls_pred)  # or np.equal(cls_true, cls_predplot_error_images(correct,cls_pred)plot_error_images(correct,cls_pred))
     # it should be calculated by this way, not tf.reduce_mean() which is a tensor
     correct_sum = correct.sum()   # correct predictions
     acc = float(correct_sum)/num_test
