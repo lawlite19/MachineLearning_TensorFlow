@@ -70,7 +70,7 @@ def initialize_biases(length):
     '''
     @param length: the length of biases, which is a vector
     '''
-    return tf.Variable(tf.constant(0.1,shape=[length]))
+    return tf.Variable(tf.constant(0.1,shape=[length]))   # remember the shape is a list
 
 '''define a function to do conv and pooling if used'''
 def conv_layer(input, 
@@ -193,7 +193,7 @@ def print_test_accuracy(print_error=False,print_confusion_matrix=False):
     @param print_confusion_matrix: whether plot the confusion_matrix
     '''
     num_test = len(data.test.images)   
-    cls_pred = np.zeros(shape=num_test, dtype=np.int)  # declare the cls_pred
+    cls_pred = np.zeros(shape=num_test, dtype=np.int)  # declare the cls_pred, note the dtype is np.int
     i = 0
     #predict the test set using batch_size
     while i < num_test:
@@ -204,7 +204,8 @@ def print_test_accuracy(print_error=False,print_confusion_matrix=False):
         cls_pred[i:j] = session.run(y_pred_cls,feed_dict=feed_dict)
         i = j
     cls_true = data.test.cls
-    correct = (cls_true == cls_pred)
+    correct = (cls_true == cls_pred)  # or np.equal(cls_true, cls_pred)
+    # it should be calculated by this way, not tf.reduce_mean() which is a tensor
     correct_sum = correct.sum()   # correct predictions
     acc = float(correct_sum)/num_test
     msg = "Accuracy on Test-Set: {0:.1%} ({1} / {2})"
