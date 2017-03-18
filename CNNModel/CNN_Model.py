@@ -282,7 +282,7 @@ def plot_conv_layer(layer, image):
     plt.show()
 
 
-optimize(9)
+optimize(999)
 print_test_accuracy(print_error=True,print_confusion_matrix=True)  # testset accuracy
 # the first conv info
 plot_conv_weights(weights=weights_conv1)
