@@ -752,7 +752,7 @@ with tf.Session() as sess:
 
 -------------------------------------------------
 
-#### 以下来自tensorflow-turorial
+#### 以下来自`tensorflow-turorial`，使用`python3.5`
 
 
 ## 九、线性模型Linear Model
@@ -803,7 +803,7 @@ def plot_images(images, cls_true, cls_pred = None):
 images = data.test.images[0:9]
 cls_true = data.test.cls[0:9]
 plot_images(images, cls_true)
-```
+```                   
 ![enter description here][13]
 
 ### 3、定义要训练的模型
@@ -889,7 +889,7 @@ def plot_example_errors():
     cls_true = data.test.cls[incorrect]   # get true value
     plot_images(images[0:9], cls_true[0:9], cls_pred[0:9])
 ```
-- 输出：
+- 输出：        
 ![enter description here][14]
 ### 7、定义可视化权重的函数
 - 代码
@@ -910,7 +910,7 @@ def plot_weights():
         ax.set_yticks([])
     plt.show()
 ```
-- 输出：
+- 输出：                               
 ![enter description here][15]
 ### 8、定义输出`confusion_matrix`的函数
 - 代码：
@@ -932,7 +932,7 @@ def print_confusion_martix():
     plt.ylabel('True')    
     plt.show()
 ```
-- 输出：
+- 输出：             
 ![enter description here][16]
 
 ## 十：CNN
@@ -1196,9 +1196,9 @@ def plot_conv_weights(weights,input_channel=0):
     plt.show()
 ```
 - 输出：
-  - 第一层：
+  - 第一层：       
   ![enter description here][17]
-  - 第二层：
+  - 第二层：     
   ![enter description here][18]
 ### 10、定义可视化卷积层输出的函数
 - 代码：
@@ -1223,9 +1223,9 @@ def plot_conv_layer(layer, image):
     plt.show()
 ```
 - 输出：
-  - 第一层：
+  - 第一层：    
   ![enter description here][19]
-  - 第二层：
+  - 第二层：      
   ![enter description here][20]
 
 
