@@ -1200,7 +1200,7 @@ def plot_conv_weights(weights,input_channel=0):
   ![enter description here][17]
   - 第二层：
   ![enter description here][18]
-### 定义可视化卷积层输出的函数
+### 10、定义可视化卷积层输出的函数
 - 代码：
 ``` stylus
 '''define a function to plot conv output layer'''
@@ -1227,6 +1227,63 @@ def plot_conv_layer(layer, image):
   ![enter description here][19]
   - 第二层：
   ![enter description here][20]
+
+
+## 十一：使用prettytensor实现CNNModel
+- 使用`MNIST`数据集
+- 加载数据，绘制9张图等函数与**九**一致，`readme`中不再写出
+### 1、定义模型
+- 定义`placeholder`,与之前的一致
+
+``` stylus
+'''declare the placeholder'''
+X = tf.placeholder(tf.float32, [None, img_flat_size], name="X")
+X_img = tf.reshape(X, shape=[-1,img_size,img_size, num_channels])
+y_true = tf.placeholder(tf.float32, shape=[None, num_classes], name="y_true")
+y_true_cls = tf.argmax(y_true,1)
+```
+- 使用`prettytensor`实现CNN模型
+
+``` stylus
+'''define the cnn model with prettytensor'''
+x_pretty = pt.wrap(X_img)
+with pt.defaults_scope():   # or pt.defaults_scope(activation_fn=tf.nn.relu) if just use one activation function
+    y_pred, loss = x_pretty.\
+        conv2d(kernel=5, depth=16, activation_fn=tf.nn.relu, name="conv_layer1").\
+        max_pool(kernel=2, stride=2).\
+        conv2d(kernel=5, depth=36, activation_fn=tf.nn.relu, name="conv_layer2").\
+        max_pool(kernel=2, stride=2).\
+        flatten().\
+        fully_connected(size=128, activation_fn=tf.nn.relu, name="fc_layer1").\
+        softmax_classifier(num_classes=num_classes, labels=y_true)
+```
+- 获取卷积核的权重(后续可视化)
+
+``` stylus
+'''define a function to get weights'''
+def get_weights_variable(layer_name):
+    with tf.variable_scope(layer_name, reuse=True):
+        variable = tf.get_variable("weights")
+    return variable
+conv1_weights = get_weights_variable("conv_layer1")
+conv2_weights = get_weights_variable("conv_layer2")
+```
+- 定义`optimizer`训练，和之前的一样了
+
+``` stylus
+'''define optimizer to train'''
+optimizer = tf.train.AdamOptimizer().minimize(loss)
+y_pred_cls = tf.argmax(y_pred,1)
+correct_prediction = tf.equal(y_pred_cls, y_true_cls)
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+session = tf.Session()
+session.run(tf.global_variables_initializer())
+```
+
+
+
+
+
 
 
   [1]: ./images/tensors_flowing.gif "tensors_flowing.gif"
