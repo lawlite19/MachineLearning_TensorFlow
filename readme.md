@@ -756,6 +756,7 @@ with tf.Session() as sess:
 
 
 ## 九、线性模型Linear Model
+- [全部代码][13]
 - 使用`MNIST`数据集
 
 ### 1、加载MNIST数据集，并输出信息
@@ -804,7 +805,7 @@ images = data.test.images[0:9]
 cls_true = data.test.cls[0:9]
 plot_images(images, cls_true)
 ```                   
-![enter description here][13]
+![enter description here][14]
 
 ### 3、定义要训练的模型
 - 定义`placeholder`
@@ -890,7 +891,7 @@ def plot_example_errors():
     plot_images(images[0:9], cls_true[0:9], cls_pred[0:9])
 ```
 - 输出：        
-![enter description here][14]
+![enter description here][15]
 ### 7、定义可视化权重的函数
 - 代码
 ``` stylus
@@ -911,7 +912,7 @@ def plot_weights():
     plt.show()
 ```
 - 输出：                               
-![enter description here][15]
+![enter description here][16]
 ### 8、定义输出`confusion_matrix`的函数
 - 代码：
 ``` stylus
@@ -933,7 +934,7 @@ def print_confusion_martix():
     plt.show()
 ```
 - 输出：             
-![enter description here][16]
+![enter description here][17]
 
 ## 十：CNN
 - 使用`MNIST`数据集
@@ -1197,9 +1198,9 @@ def plot_conv_weights(weights,input_channel=0):
 ```
 - 输出：
   - 第一层：       
-  ![enter description here][17]
-  - 第二层：     
   ![enter description here][18]
+  - 第二层：     
+  ![enter description here][19]
 ### 10、定义可视化卷积层输出的函数
 - 代码：
 ``` stylus
@@ -1224,9 +1225,9 @@ def plot_conv_layer(layer, image):
 ```
 - 输出：
   - 第一层：    
-  ![enter description here][19]
-  - 第二层：      
   ![enter description here][20]
+  - 第二层：      
+  ![enter description here][21]
 
 
 ## 十一：使用prettytensor实现CNNModel
@@ -1279,11 +1280,10 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 session = tf.Session()
 session.run(tf.global_variables_initializer())
 ```
-
-
-
-
-
+## 十二：保存和加载模型，使用Early Stopping
+- 使用`MNIST`数据集
+- 加载数据，绘制9张图等函数与**九**一致，`readme`中不再写出
+### 1、定义模型
 
 
   [1]: ./images/tensors_flowing.gif "tensors_flowing.gif"
@@ -1298,11 +1298,12 @@ session.run(tf.global_variables_initializer())
   [10]: ./images/Mnist_02.png "Mnist_02.png"
   [11]: ./images/cnn_mnist_02.png "cnn_mnist_02.png"
   [12]: ./images/cnn_mnist_01.png "cnn_mnist_01.png"
-  [13]: ./images/LinearModel_01.png "LinearModel_01"
-  [14]: ./images/LinearModel_02.png "LinearModel_02"
-  [15]: ./images/LinearModel_03.png "LinearModel_03"
-  [16]: ./images/LinearModel_04.png "LinearModel_04"
-  [17]: ./images/CNNModel_01.png "CNNModel_01"
-  [18]: ./images/CNNModel_03.png "CNNModel_03"
-  [19]: ./images/CNNModel_02.png "CNNModel_02"
-  [20]: ./images/CNNModel_04.png "CNNModel_04"
+  [13]: LinearModel/LinearModel.py
+  [14]: ./images/LinearModel_01.png "LinearModel_01"
+  [15]: ./images/LinearModel_02.png "LinearModel_02"
+  [16]: ./images/LinearModel_03.png "LinearModel_03"
+  [17]: ./images/LinearModel_04.png "LinearModel_04"
+  [18]: ./images/CNNModel_01.png "CNNModel_01"
+  [19]: ./images/CNNModel_03.png "CNNModel_03"
+  [20]: ./images/CNNModel_02.png "CNNModel_02"
+  [21]: ./images/CNNModel_04.png "CNNModel_04"
