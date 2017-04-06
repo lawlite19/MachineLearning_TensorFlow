@@ -1345,6 +1345,30 @@ def optimize(num_iterations):
     time_diff = end_time-start_time
     print("Time usage:" + str(timedelta(seconds=int(round(time_diff)))))
 ```
+- 调用`optimize(10000)`输出信息
+
+``` stylus
+Iter:   5100, Train_batch accuracy:100.0%, validation acc: 98.8% *
+Iter:   5200, Train_batch accuracy:100.0%, validation acc: 98.3% 
+Iter:   5300, Train_batch accuracy:100.0%, validation acc: 98.7% 
+Iter:   5400, Train_batch accuracy: 98.4%, validation acc: 98.6% 
+Iter:   5500, Train_batch accuracy: 98.4%, validation acc: 98.6% 
+Iter:   5600, Train_batch accuracy:100.0%, validation acc: 98.7% 
+Iter:   5700, Train_batch accuracy: 96.9%, validation acc: 98.9% *
+Iter:   5800, Train_batch accuracy:100.0%, validation acc: 98.6% 
+Iter:   5900, Train_batch accuracy:100.0%, validation acc: 98.6% 
+Iter:   6000, Train_batch accuracy: 98.4%, validation acc: 98.7% 
+Iter:   6100, Train_batch accuracy:100.0%, validation acc: 98.7% 
+Iter:   6200, Train_batch accuracy:100.0%, validation acc: 98.7% 
+Iter:   6300, Train_batch accuracy: 98.4%, validation acc: 98.8% 
+Iter:   6400, Train_batch accuracy: 98.4%, validation acc: 98.8% 
+Iter:   6500, Train_batch accuracy:100.0%, validation acc: 98.7% 
+Iter:   6600, Train_batch accuracy:100.0%, validation acc: 98.7% 
+Iter:   6700, Train_batch accuracy:100.0%, validation acc: 98.8% 
+No improvement found in a while, stop running
+Time usage:0:18:43
+```
+可以看到最后10次输出（没100次输出一次）在验证集上准确度都没有提高，直接保存
 
 ### 3、 小批量预测并计算准确率
 - 因为需要预测**测试集和验证集**，这里参数指定需要的images

@@ -170,7 +170,7 @@ def cls_accuracy(correct):
 def validation_accuracy():
     correct, _ = predict_cls_validation()
     return cls_accuracy(correct)
-'''define a function to'''
+'''define a function to calculate test acc'''
 def print_test_accuracy(show_example_errors=False,
                         show_confusion_matrix=False):
     correct, cls_pred = predict_cls_test()
@@ -204,14 +204,14 @@ def plot_conv_weights(weights, input_channel=0):
         ax.set_xticks([])
         ax.set_yticks([])
     plt.show()
-#print_test_accuracy()
-#plot_conv_weights(weights=weights_conv1)
-#optimize(10000)
-#print_test_accuracy(show_example_errors=True,
-                    #show_confusion_matrix=True)
-#plot_conv_weights(weights=weights_conv1)
-'''restore the variables that saved on disk'''
-saver.restore(sess=session, save_path=save_path)
-print_test_accuracy(True, True)
+print_test_accuracy()
+plot_conv_weights(weights=weights_conv1)
+optimize(10000)
+print_test_accuracy(show_example_errors=True,
+                    show_confusion_matrix=True)
+plot_conv_weights(weights=weights_conv1)
+#'''restore the variables that saved on disk'''
+#saver.restore(sess=session, save_path=save_path)
+#print_test_accuracy(True, True)
 
 
