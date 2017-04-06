@@ -937,6 +937,7 @@ def print_confusion_martix():
 ![enter description here][17]
 
 ## 十：CNN
+- [全部代码][18]
 - 使用`MNIST`数据集
 - 加载数据，绘制9张图等函数与上面一致，`readme`中不再写出
 
@@ -1198,9 +1199,9 @@ def plot_conv_weights(weights,input_channel=0):
 ```
 - 输出：
   - 第一层：       
-  ![enter description here][18]
-  - 第二层：     
   ![enter description here][19]
+  - 第二层：     
+  ![enter description here][20]
 ### 10、定义可视化卷积层输出的函数
 - 代码：
 ``` stylus
@@ -1225,12 +1226,13 @@ def plot_conv_layer(layer, image):
 ```
 - 输出：
   - 第一层：    
-  ![enter description here][20]
-  - 第二层：      
   ![enter description here][21]
+  - 第二层：      
+  ![enter description here][22]
 
 
 ## 十一：使用prettytensor实现CNNModel
+- [全部代码][23]
 - 使用`MNIST`数据集
 - 加载数据，绘制9张图等函数与**九**一致，`readme`中不再写出
 ### 1、定义模型
@@ -1280,10 +1282,134 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 session = tf.Session()
 session.run(tf.global_variables_initializer())
 ```
-## 十二：保存和加载模型，使用Early Stopping
+## 十二：CNN,保存和加载模型，使用Early Stopping
+- [全部代码][24]
 - 使用`MNIST`数据集
 - 加载数据，绘制9张图等函数与**九**一致，`readme`中不再写出
-### 1、定义模型
+- CNN模型的定义和**十一**中的一致，`readme`中不再写出
+### 1、保存模型
+- 创建saver,和保存的目录
+
+``` stylus
+'''define a Saver to save the network'''
+saver = tf.train.Saver()
+save_dir = "checkpoints/"
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
+save_path = os.path.join(save_dir, 'best_validation')
+```
+- 保存session,对应到下面2中的Early Stopping，将最好的模型保存
+
+``` stylus
+saver.save(sess=session, save_path=save_path)
+```
+
+
+### 2、Early Stopping
+
+``` stylus
+'''declear the train info'''
+train_batch_size = 64
+best_validation_accuracy = 0.0
+last_improvement = 0
+require_improvement_iterations = 1000
+total_iterations = 0
+'''define a function to optimize the optimizer'''
+def optimize(num_iterations):
+    global total_iterations
+    global best_validation_accuracy
+    global last_improvement
+    start_time = time.time()
+    for i in range(num_iterations):
+        total_iterations += 1
+        X_batch, y_true_batch = data.train.next_batch(train_batch_size)
+        feed_dict_train = {X: X_batch,
+                     y_true: y_true_batch}
+        session.run(optimizer, feed_dict=feed_dict_train)
+        if (total_iterations%100 == 0) or (i == num_iterations-1):
+            acc_train = session.run(accuracy, feed_dict=feed_dict_train)
+            acc_validation, _ = validation_accuracy()
+            if acc_validation > best_validation_accuracy:
+                best_validation_accuracy = acc_validation
+                last_improvement = total_iterations
+                saver.save(sess=session, save_path=save_path)
+                improved_str = "*"
+            else:
+                improved_str = ""
+            msg = "Iter: {0:>6}, Train_batch accuracy:{1:>6.1%}, validation acc:{2:>6.1%} {3}"
+            print(msg.format(i+1, acc_train, acc_validation, improved_str))
+        if total_iterations-last_improvement > require_improvement_iterations:
+            print('No improvement found in a while, stop running')
+            break
+    end_time = time.time()
+    time_diff = end_time-start_time
+    print("Time usage:" + str(timedelta(seconds=int(round(time_diff)))))
+```
+
+### 3、 小批量预测并计算准确率
+- 因为需要预测**测试集和验证集**，这里参数指定需要的images
+``` stylus
+'''define a function to predict using batch'''
+batch_size_predict = 256
+def predict_cls(images, labels, cls_true):
+    num_images = len(images)
+    cls_pred = np.zeros(shape=num_images, dtype=np.int)
+    i = 0
+    while i < num_images:
+        j = min(i+batch_size_predict, num_images)
+        feed_dict = {X: images[i:j,:],
+                     y_true: labels[i:j,:]}
+        cls_pred[i:j] = session.run(y_pred_cls, feed_dict=feed_dict)
+        i = j
+    correct = (cls_true==cls_pred)
+    return correct, cls_pred
+```
+- 测试集和验证集直接调用即可
+
+``` stylus
+def predict_cls_test():
+    return predict_cls(data.test.images, data.test.labels, data.test.cls)
+
+def predict_cls_validation():
+    return predict_cls(data.validation.images, data.validation.labels, data.validation.cls)
+```
+- 计算验证集准确率（上面optimize函数中需要用到）
+
+``` stylus
+'''calculate the acc'''
+def cls_accuracy(correct):
+    correct_sum = correct.sum()
+    acc = float(correct_sum)/len(correct)
+    return acc, correct_sum
+'''define a function to calculate the validation acc'''
+def validation_accuracy():
+    correct, _ = predict_cls_validation()
+    return cls_accuracy(correct)
+```
+- 计算测试集准确率，并且输出错误的预测和confusion matrix
+
+``` stylus
+'''define a function to calculate test acc'''
+def print_test_accuracy(show_example_errors=False,
+                        show_confusion_matrix=False):
+    correct, cls_pred = predict_cls_test()
+    acc, num_correct = cls_accuracy(correct)
+    num_images = len(correct)
+    msg = "Accuracy on Test-Set: {0:.1%} ({1} / {2})"
+    print(msg.format(acc, num_correct, num_images))
+
+    # Plot some examples of mis-classifications, if desired.
+    if show_example_errors:
+        print("Example errors:")
+        plot_example_errors(cls_pred=cls_pred, correct=correct)
+
+    # Plot the confusion matrix, if desired.
+    if show_confusion_matrix:
+        print("Confusion Matrix:")
+        plot_confusion_matrix(cls_pred=cls_pred) 
+```
+
+
 
 
   [1]: ./images/tensors_flowing.gif "tensors_flowing.gif"
@@ -1303,7 +1429,10 @@ session.run(tf.global_variables_initializer())
   [15]: ./images/LinearModel_02.png "LinearModel_02"
   [16]: ./images/LinearModel_03.png "LinearModel_03"
   [17]: ./images/LinearModel_04.png "LinearModel_04"
-  [18]: ./images/CNNModel_01.png "CNNModel_01"
-  [19]: ./images/CNNModel_03.png "CNNModel_03"
-  [20]: ./images/CNNModel_02.png "CNNModel_02"
-  [21]: ./images/CNNModel_04.png "CNNModel_04"
+  [18]: CNNModel/CNN_Model.py
+  [19]: ./images/CNNModel_01.png "CNNModel_01"
+  [20]: ./images/CNNModel_03.png "CNNModel_03"
+  [21]: ./images/CNNModel_02.png "CNNModel_02"
+  [22]: ./images/CNNModel_04.png "CNNModel_04"
+  [23]: CNNModel_PrettyTensor/CNNModel_prettytensor.py
+  [24]: CNNModel_EarlyStopping_Save_Restore/CNNModel_EarlyStopping_Save_Restore.py
