@@ -1,5 +1,64 @@
 TensorFlow
 ================
+##  目录
+* [TensorFlow](#tensorflow)
+	* [一、TensorFlow介绍](#一-tensorflow介绍)
+		* [1、什么是TensorFlow](#1-什么是tensorflow)
+		* [2、TensorFlow强大之处](#2-tensorflow强大之处)
+		* [3、安装TensorFlow](#3-安装tensorflow)
+	* [二、TensorFlow基础架构](#二-tensorflow基础架构)
+		* [1、处理结构](#1-处理结构)
+		* [2、一个例子](#2-一个例子)
+		* [3、Session会话控制](#3-session会话控制)
+		* [4、变量](#4-变量)
+		* [5、传入值](#5-传入值)
+	* [三、定义一个神经网络](#三-定义一个神经网络)
+		* [1、添加层函数](#1-添加层函数)
+		* [2、构建神经网络](#2-构建神经网络)
+		* [3、可视化结果](#3-可视化结果)
+	* [四、TensorFlow可视化](#四-tensorflow可视化)
+		* [1、TensorFlow的可视化工具，可视化神经网路额结构](#1-tensorflow的可视化工具可视化神经网路额结构)
+		* [2、可视化训练过程](#2-可视化训练过程)
+	* [五、手写数字识别_1](#五-手写数字识别_1)
+		* [1、说明](#1-说明)
+		* [2、代码实现](#2-代码实现)
+	* [六、手写数字识别_2](#六-手写数字识别_2)
+		* [1、说明](#1-说明)
+		* [2、代码](#2-代码)
+	* [七、手写数字识别_3_CNN卷积神经网络](#七-手写数字识别_3_cnn卷积神经网络)
+		* [1、说明](#1-说明)
+		* [2、代码实现](#2-代码实现)
+		* [3、运行结果](#3-运行结果)
+	* [八、保存和提取神经网络](#八-保存和提取神经网络)
+		* [1、保存](#1-保存)
+		* [2、提取](#2-提取)
+			* [以下来自，使用](#以下来自使用)
+	* [九、线性模型Linear Model](#九-线性模型linear-model)
+		* [1、加载MNIST数据集，并输出信息](#1-加载mnist数据集并输出信息)
+		* [2、绘制9张图像](#2-绘制9张图像)
+		* [3、定义要训练的模型](#3-定义要训练的模型)
+		* [4、定义函数进行bgd训练](#4-定义函数进行bgd训练)
+		* [5、定义输出准确度的函数](#5-定义输出准确度的函数)
+		* [6、定义绘制错误预测的图片函数](#6-定义绘制错误预测的图片函数)
+		* [7、定义可视化权重的函数](#7-定义可视化权重的函数)
+		* [8、定义输出的函数](#8-定义输出的函数)
+	* [十：CNN](#十cnn)
+		* [1、定义CNN所需要的变量](#1-定义cnn所需要的变量)
+		* [2、初始化weights和biases的函数](#2-初始化weights和biases的函数)
+		* [3、定义卷积操作和池化（如果使用的话）的函数](#3-定义卷积操作和池化如果使用的话的函数)
+		* [4、定义将卷积层展开的函数](#4-定义将卷积层展开的函数)
+		* [5、定义全连接层的函数](#5-定义全连接层的函数)
+		* [6、定义模型](#6-定义模型)
+		* [7、定义训练的函数，使用bgd](#7-定义训练的函数使用bgd)
+		* [8、定义批量预测的函数，方便输出训练错的图像](#8-定义批量预测的函数方便输出训练错的图像)
+		* [9、定义可视化卷积核权重的函数](#9-定义可视化卷积核权重的函数)
+		* [10、定义可视化卷积层输出的函数](#10-定义可视化卷积层输出的函数)
+	* [十一：使用prettytensor实现CNNModel](#十一使用prettytensor实现cnnmodel)
+		* [1、定义模型](#1-定义模型)
+	* [十二：CNN,保存和加载模型，使用Early Stopping](#十二cnn保存和加载模型使用early-stopping)
+		* [1、保存模型](#1-保存模型)
+		* [2、Early Stopping](#2-early-stopping)
+		* [3、 小批量预测并计算准确率](#3-小批量预测并计算准确率)
 
 ## 一、TensorFlow介绍
 
@@ -1368,7 +1427,7 @@ Iter:   6700, Train_batch accuracy:100.0%, validation acc: 98.8%
 No improvement found in a while, stop running
 Time usage:0:18:43
 ```
-可以看到最后10次输出（没100次输出一次）在验证集上准确度都没有提高，直接保存
+可以看到最后10次输出（每100次输出一次）在验证集上准确度都没有提高，停止执行
 
 ### 3、 小批量预测并计算准确率
 - 因为需要预测**测试集和验证集**，这里参数指定需要的images
@@ -1433,30 +1492,36 @@ def print_test_accuracy(show_example_errors=False,
         plot_confusion_matrix(cls_pred=cls_pred) 
 ```
 
+## 十二：CNN,保存和加载模型，使用Early Stopping
+- [全部代码][24]
+- 使用`MNIST`数据集
+- 加载数据，绘制9张图等函数与**九**一致，`readme`中不再写出
+- CNN模型的定义和**十一**中的一致，`readme`中不再写出
+### 1、保存模型
 
 
 
-  [1]: ./images/tensors_flowing.gif "tensors_flowing.gif"
-  [2]: ./images/example_01.png "example_01.png"
-  [3]: ./images/example_02.gif "example_02.gif"
-  [4]: ./images/tensorboard_01.png "tensorboard_01.png"
-  [5]: ./images/tensorboard_02.png "tensorboard_02.png"
-  [6]: ./images/tensorboard_03.png "tensorboard_03.png"
-  [7]: ./images/tensorboard_04.png "tensorboard_04.png"
-  [8]: ./images/tensorboard_05.png "tensorboard_05.png"
-  [9]: ./images/Mnist_01.png "Mnist_01.png"
-  [10]: ./images/Mnist_02.png "Mnist_02.png"
-  [11]: ./images/cnn_mnist_02.png "cnn_mnist_02.png"
-  [12]: ./images/cnn_mnist_01.png "cnn_mnist_01.png"
-  [13]: LinearModel/LinearModel.py
-  [14]: ./images/LinearModel_01.png "LinearModel_01"
-  [15]: ./images/LinearModel_02.png "LinearModel_02"
-  [16]: ./images/LinearModel_03.png "LinearModel_03"
-  [17]: ./images/LinearModel_04.png "LinearModel_04"
-  [18]: CNNModel/CNN_Model.py
-  [19]: ./images/CNNModel_01.png "CNNModel_01"
-  [20]: ./images/CNNModel_03.png "CNNModel_03"
-  [21]: ./images/CNNModel_02.png "CNNModel_02"
-  [22]: ./images/CNNModel_04.png "CNNModel_04"
-  [23]: CNNModel_PrettyTensor/CNNModel_prettytensor.py
-  [24]: CNNModel_EarlyStopping_Save_Restore/CNNModel_EarlyStopping_Save_Restore.py
+  [1]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/tensors_flowing.gif "tensors_flowing.gif"
+  [2]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/example_01.png "example_01.png"
+  [3]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/example_02.gif "example_02.gif"
+  [4]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/tensorboard_01.png "tensorboard_01.png"
+  [5]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/tensorboard_02.png "tensorboard_02.png"
+  [6]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/tensorboard_03.png "tensorboard_03.png"
+  [7]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/tensorboard_04.png "tensorboard_04.png"
+  [8]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/tensorboard_05.png "tensorboard_05.png"
+  [9]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/Mnist_01.png "Mnist_01.png"
+  [10]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/Mnist_02.png "Mnist_02.png"
+  [11]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/cnn_mnist_02.png "cnn_mnist_02.png"
+  [12]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/cnn_mnist_01.png "cnn_mnist_01.png"
+  [13]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/LinearModel/LinearModel.py
+  [14]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/LinearModel_01.png "LinearModel_01"
+  [15]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/LinearModel_02.png "LinearModel_02"
+  [16]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/LinearModel_03.png "LinearModel_03"
+  [17]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/LinearModel_04.png "LinearModel_04"
+  [18]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/CNNModel/CNN_Model.py
+  [19]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/CNNModel_01.png "CNNModel_01"
+  [20]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/CNNModel_03.png "CNNModel_03"
+  [21]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/CNNModel_02.png "CNNModel_02"
+  [22]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/CNNModel_04.png "CNNModel_04"
+  [23]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/CNNModel_PrettyTensor/CNNModel_prettytensor.py
+  [24]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/CNNModel_EarlyStopping_Save_Restore/CNNModel_EarlyStopping_Save_Restore.py
