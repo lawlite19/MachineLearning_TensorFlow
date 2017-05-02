@@ -1,0 +1,2 @@
+model_checkpoint_path: "cifat10_cnn-5000"
+all_model_checkpoint_paths: "cifat10_cnn-5000"

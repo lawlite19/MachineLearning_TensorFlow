@@ -1492,12 +1492,79 @@ def print_test_accuracy(show_example_errors=False,
         plot_confusion_matrix(cls_pred=cls_pred) 
 ```
 
-## 十二：CNN,保存和加载模型，使用Early Stopping
-- [全部代码][24]
+## 十二：模型融合
+- [全部代码][25]
 - 使用`MNIST`数据集
-- 加载数据，绘制9张图等函数与**九**一致，`readme`中不再写出
-- CNN模型的定义和**十一**中的一致，`readme`中不再写出
-### 1、保存模型
+- 一些方法和之前的一致，不在给出
+- 其中训练了多个CNN 模型，然后取预测的平均值作为最后的预测结果
+### 1、将测试集和验证集合并后，并重新划分
+- 主要是希望训练时数据集有些变换，否则都是一样的数据去训练了，最后再融合意义不大
+``` stylus
+'''将training set和validation set合并，并重新划分'''
+combine_images = np.concatenate([data.train.images, data.validation.images], axis=0)
+combine_labels = np.concatenate([data.train.labels, data.validation.labels], axis=0)
+print("合并后图片：", combine_images.shape)
+print("合并后label：", combine_labels.shape)
+combined_size = combine_labels.shape[0]
+train_size = int(0.8*combined_size)
+validation_size = combined_size - train_size
+'''函数：将合并后的重新随机划分'''
+def random_training_set():
+    idx = np.random.permutation(combined_size)   # 将0-combined_size数字随机排列
+    idx_train = idx[0:train_size]
+    idx_validation = idx[train_size:]
+    x_train = combine_images[idx_train, :]
+    y_train = combine_labels[idx_train, :]
+    
+    x_validation = combine_images[idx_validation, :]
+    y_validation = combine_images[idx_validation, :]
+    return x_train, y_train, x_validation, y_validation
+```
+### 2、融合模型
+- 加载训练好的模型，并输出每个模型在测试集的预测结果等
+``` stylus
+def ensemble_predictions():
+    pred_labels = []
+    test_accuracies = []
+    validation_accuracies = []
+    for i in range(num_networks):
+        saver.restore(sess=session, save_path=get_save_path(i))
+        test_acc = test_accuracy()
+        test_accuracies.append(test_acc)
+        validation_acc = validation_accuracy()
+        validation_accuracies.append(validation_acc)
+        msg = "网络：{0}，验证集：{1:.4f}，测试集{2:.4f}"
+        print(msg.format(i, validation_acc, test_acc))
+        pred = predict_labels(data.test.images)
+        pred_labels.append(pred)
+    return np.array(pred_labels),\
+           np.array(test_accuracies),\
+           np.array(validation_accuracies)
+```
+- 调用`pred_labels, test_accuracies, val_accuracies = ensemble_predictions()`
+- 取均值：`ensemble_pred_labels = np.mean(pred_labels, axis=0)`
+- 融合后的真实结果：`ensemble_cls_pred = np.argmax(ensemble_pred_labels, axis=1)`
+- 其他一些信息：
+
+``` stylus
+ensemble_correct = (ensemble_cls_pred == data.test.cls)
+ensemble_incorrect = np.logical_not(ensemble_correct)
+print(test_accuracies)
+best_net = np.argmax(test_accuracies)
+print(best_net)
+print(test_accuracies[best_net])
+best_net_pred_labels = pred_labels[best_net, :, :]
+best_net_cls_pred = np.argmax(best_net_pred_labels, axis=1)
+best_net_correct = (best_net_cls_pred == data.test.cls)
+best_net_incorrect = np.logical_not(best_net_correct)
+print("融合后预测对的：", np.sum(ensemble_correct))
+print("单个最好模型预测对的", np.sum(best_net_correct))
+ensemble_better = np.logical_and(best_net_incorrect, ensemble_correct)  # 融合之后好于单个的个数
+print(ensemble_better.sum())
+best_net_better = np.logical_and(best_net_correct, ensemble_incorrect)  # 单个好于融合之后的个数
+print(best_net_better.sum())
+```
+
 
 
 
@@ -1525,3 +1592,4 @@ def print_test_accuracy(show_example_errors=False,
   [22]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/CNNModel_04.png "CNNModel_04"
   [23]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/CNNModel_PrettyTensor/CNNModel_prettytensor.py
   [24]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/CNNModel_EarlyStopping_Save_Restore/CNNModel_EarlyStopping_Save_Restore.py
+  [25]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/Ensemble_Learning/ensemble_learning.py
