@@ -1566,6 +1566,262 @@ print(best_net_better.sum())
 ```
 
 
+## 十二：Cifar-10数据集，使用`variable_scope`重复使用变量
+- [全部代码][26]
+- 使用`CIFAR-10`数据集
+- 创建了**两个网络**，一个用于训练，一个用于测试，测试使用的是训练好的权重参数，所以用到**参数重用**
+### 1、数据集
+- 导入包：
+  - 这是别人实现好的下载和处理`cifar-10`数据集的diamante
+``` stylus
+import cifar10
+from cifar10 import img_size, num_channels, num_classes
+```
+
+
+- 输出一些数据集信息
+
+``` stylus
+'''下载cifar10数据集, 大概163M'''
+cifar10.maybe_download_and_extract()
+'''加载数据集'''
+images_train, cls_train, labels_train = cifar10.load_training_data()
+images_test,  cls_test,  labels_test  = cifar10.load_test_data()
+
+'''打印一些信息'''
+class_names = cifar10.load_class_names()
+print(class_names)
+print("Size of:")
+print("training set:\t\t{}".format(len(images_train)))
+print("test set:\t\t\t{}".format(len(images_test)))
+```
+- 显示9张图片函数
+  - 相比之前的，加入了`smooth`
+
+``` stylus
+'''显示9张图片函数'''
+def plot_images(images, cls_true, cls_pred=None, smooth=True):   # smooth是否平滑显示
+    assert len(images) == len(cls_true) == 9
+    fig, axes = plt.subplots(3,3)
+    
+    for i, ax in enumerate(axes.flat):
+        if smooth:
+            interpolation = 'spline16'
+        else:
+            interpolation = 'nearest'
+        ax.imshow(images[i, :, :, :], interpolation=interpolation)
+        cls_true_name = class_names[cls_true[i]]
+        if cls_pred is None:
+            xlabel = "True:{0}".format(cls_true_name)
+        else:
+            cls_pred_name = class_names[cls_pred[i]]
+            xlabel = "True:{0}, Pred:{1}".format(cls_true_name, cls_pred_name)
+        ax.set_xlabel(xlabel)
+        ax.set_xticks([])
+        ax.set_yticks([])
+    plt.show()
+```
+### 2、定义`placeholder`
+
+``` stylus
+X = tf.placeholder(tf.float32, shape=[None, img_size, img_size, num_channels], name="X")
+y_true = tf.placeholder(tf.float32, shape=[None, num_classes], name="y")
+y_true_cls = tf.argmax(y_true, axis=1)
+```
+### 3、图片处理
+- 单张图片处理
+  - 原图是`32*32`像素的，裁剪成`24*24`像素的
+  - 如果是训练集进行一些裁剪，翻转，饱和度等处理
+  - 如果是测试集，只进行简单的裁剪处理
+  - 这也是为什么使用`variable_scope`定义两个网络
+``` stylus
+'''单个图片预处理, 测试集只需要裁剪就行了'''
+def pre_process_image(image, training):
+    if training:
+        image = tf.random_crop(image, size=[img_size_cropped, img_size_cropped, num_channels])  # 裁剪
+        image = tf.image.random_flip_left_right(image)                  # 左右翻转
+        image = tf.image.random_hue(image, max_delta=0.05)              # 色调调整
+        image = tf.image.random_brightness(image, max_delta=0.2)        # 曝光
+        image = tf.image.random_saturation(image, lower=0.0, upper=2.0) # 饱和度
+        '''上面的调整可能pixel值超过[0, 1], 所以约束一下'''        
+        image = tf.minimum(image, 1.0)
+        image = tf.maximum(image, 0.0)
+    else:
+        image = tf.image.resize_image_with_crop_or_pad(image, target_height=img_size_cropped, 
+                                              target_width=img_size_cropped)
+    return image
+```
+- 多张图片处理
+ - 因为训练和测试是都是使用`batch`的方式
+ - 调用上面处理单张图片的函数
+ - tf.map_fn(fn, elems)函数，前面一般是`lambda`函数，后面是所有的数据
+``` stylus
+'''调用上面的函数，处理多个图片images'''
+def pre_process(images, training):
+    images = tf.map_fn(lambda image: pre_process_image(image, training), images)   # tf.map_fn()使用lambda函数
+    return images
+```
+### 4、定义tensorflow计算图
+- 定义主网络图
+  - 使用`prettytensor`
+  - 分为`training`和`test`两个阶段
+
+``` stylus
+'''定义主网络函数'''
+def main_network(images, training):
+    x_pretty = pt.wrap(images)
+    if training:
+        phase = pt.Phase.train
+    else:
+        phase = pt.Phase.infer
+    with pt.defaults_scope(activation_fn=tf.nn.relu, phase=phase):
+        y_pred, loss = x_pretty.\
+        conv2d(kernel=5, depth=64, name="layer_conv1", batch_normalize=True).\
+        max_pool(kernel=2, stride=2).\
+        conv2d(kernel=5, depth=64, name="layer_conv2").\
+        max_pool(kernel=2, stride=2).\
+        flatten().\
+        fully_connected(size=256, name="layer_fc1").\
+        fully_connected(size=128, name="layer_fc2").\
+        softmax_classifier(num_classes, labels=y_true)
+    return y_pred, loss
+```
+- 创建所有网络，包含**预处理图片和主网络**
+  - 需要使用**variable_scope**, 测试阶段需要`reuse`训练阶段的参数
+``` stylus
+'''创建所有网络, 包含预处理和主网络，'''
+def create_network(training):
+    # 使用variable_scope可以重复使用定义的变量，训练时创建新的，测试时重复使用
+    with tf.variable_scope("network", reuse=not training):
+        images = X
+        images = pre_process(images=images, training=training)
+        y_pred, loss = main_network(images=images, training=training)
+    return y_pred, loss
+```
+- 创建训练阶段网络
+  - 定义一个`global_step`记录训练的次数，下面会将其保存到`checkpoint`,`trainable`为`False`就不会训练改变
+``` stylus
+'''训练阶段网络创建'''
+global_step = tf.Variable(initial_value=0, 
+                          name="global_step",
+                          trainable=False) # trainable 在训练阶段不会改变
+_, loss = create_network(training=True)
+optimizer = tf.train.AdamOptimizer(learning_rate=0.0001).minimize(loss, global_step)
+
+```
+- 定义测试阶段网络
+  - 同时定义准确率
+
+``` stylus
+'''测试阶段网络创建'''
+y_pred, _ = create_network(training=False)
+y_pred_cls = tf.argmax(y_pred, dimension=1)
+correct_prediction = tf.equal(y_pred_cls, y_true_cls)
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+```
+
+### 5、获取权重和每层的输出值信息
+- 获取权重变量
+
+``` stylus
+def get_weights_variable(layer_name):
+    with tf.variable_scope("network/" + layer_name, reuse=True):
+        variable = tf.get_variable("weights")
+    return variable 
+weights_conv1 = get_weights_variable("layer_conv1")
+weights_conv2 = get_weights_variable("layer_conv2")
+```
+- 获取每层的输出变量
+
+``` stylus
+def get_layer_output(layer_name):
+    tensor_name = "network/" + layer_name + "/Relu:0"
+    tensor = tf.get_default_graph().get_tensor_by_name(tensor_name)
+    return tensor
+output_conv1 = get_layer_output("layer_conv1")
+output_conv2 = get_layer_output("layer_conv2")
+```
+
+### 6、保存和加载计算图参数
+- 因为第一次不会加载，所以放到`try`中判断
+
+``` stylus
+'''执行tensorflow graph'''
+session = tf.Session()
+save_dir = "checkpoints/"
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
+save_path = os.path.join(save_dir, 'cifat10_cnn')
+
+'''尝试存储最新的checkpoint, 可能会失败，比如第一次运行checkpoint不存在等'''
+try:
+    print("开始存储最新的存储...")
+    last_chk_path = tf.train.latest_checkpoint(save_dir)
+    saver.restore(session, save_path=last_chk_path)
+    print("存储点来自：", last_chk_path)
+except:
+    print("存储错误, 初始化变量")
+    session.run(tf.global_variables_initializer())
+```
+
+### 7、训练
+- 获取`batch`
+
+``` stylus
+'''SGD'''
+train_batch_size = 64
+def random_batch():
+    num_images = len(images_train)
+    idx = np.random.choice(num_images, size=train_batch_size, replace=False)
+    x_batch = images_train[idx, :, :, :]
+    y_batch = labels_train[idx, :]
+    return x_batch, y_batch
+```
+- 训练网络
+  - 每1000次保存一下`checkpoint`
+  - 因为上面会`restored`已经保存训练的网络，同时也保存了训练的次数，所以可以接着训练
+``` stylus
+def optimize(num_iterations):
+    start_time = time.time()
+    for i in range(num_iterations):
+        x_batch, y_batch = random_batch()
+        feed_dict_train = {X: x_batch, y_true: y_batch}
+        i_global, _ = session.run([global_step, optimizer], feed_dict=feed_dict_train)
+        if (i_global%100==0) or (i == num_iterations-1):
+            batch_acc = session.run(accuracy, feed_dict=feed_dict_train)
+            msg = "global step: {0:>6}, training batch accuracy: {1:>6.1%}"
+            print(msg.format(i_global, batch_acc))
+        if(i_global%1000==0) or (i==num_iterations-1):
+            saver.save(session, save_path=save_path,
+                       global_step=global_step)
+            print("保存checkpoint")
+    end_time = time.time()
+    time_diff = end_time-start_time
+    print("耗时：", str(timedelta(seconds=int(round(time_diff)))))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   [1]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/tensors_flowing.gif "tensors_flowing.gif"
@@ -1593,3 +1849,4 @@ print(best_net_better.sum())
   [23]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/CNNModel_PrettyTensor/CNNModel_prettytensor.py
   [24]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/CNNModel_EarlyStopping_Save_Restore/CNNModel_EarlyStopping_Save_Restore.py
   [25]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/Ensemble_Learning/ensemble_learning.py
+  [26]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/Ensemble_Learning/CNN_for_CIFAR-10

@@ -32,7 +32,7 @@ print("test set:\t\t\t{}".format(len(images_test)))
 img_size_cropped = 24   # 图片是32*32的，我们裁剪成24*24的
 
 '''显示9张图片函数'''
-def plot_images(images, cls_true, cls_pred=None, smooth=True):
+def plot_images(images, cls_true, cls_pred=None, smooth=True):   # smooth是否平滑显示
     assert len(images) == len(cls_true) == 9
     fig, axes = plt.subplots(3,3)
     
@@ -78,7 +78,7 @@ def pre_process_image(image, training):
     return image
 '''调用上面的函数，处理多个图片images'''
 def pre_process(images, training):
-    images = tf.map_fn(lambda image: pre_process_image(image, training), images)
+    images = tf.map_fn(lambda image: pre_process_image(image, training), images)   # tf.map_fn()使用lambda函数
     return images
 distorted_images = pre_process(images=X, training=True)
 
