@@ -233,6 +233,7 @@ TensorFlow
  - 可以再用命令：`strings /lib64/libc.so.6 |grep GLIBC`查看
 
 - 添加**GLIBCXX_3.4.19**的支持
+ - 下载：`wget https://raw.githubusercontent.com/lawlite19/LinuxSoftware/master/python2.7_tensorflow/libstdc++.so.6.0.20` 
  - 复制到`/usr/lib64`文件夹下：`cp libstdc++.so.6.0.20 /usr/lib64/`
  - 添加执行权限：`chmod +x /usr/lib64/libstdc++.so.6.0.20`
  - 删除原来的：`rm -rf /usr/lib64/libstdc++.so.6`
