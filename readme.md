@@ -1571,6 +1571,9 @@ print(best_net_better.sum())
 - [全部代码][26]
 - 使用`CIFAR-10`数据集
 - 创建了**两个网络**，一个用于训练，一个用于测试，测试使用的是训练好的权重参数，所以用到**参数重用**
+- 网络结构
+
+![cifar-10结构][27]
 ### 1、数据集
 - 导入包：
   - 这是别人实现好的下载和处理`cifar-10`数据集的diamante
@@ -1802,25 +1805,52 @@ def optimize(num_iterations):
     print("耗时：", str(timedelta(seconds=int(round(time_diff)))))
 ```
 
+## 十三、Inception model (GoogleNet)
+- [全部代码][28]
+- 使用`CIFAR-10`数据集
+- 创建了**两个网络**，一个用于训练，一个用于测试，测试使用的是训练好的权重参数，所以用到**参数重用**
+- 网络结构
 
+![inception model(Google Net)][29]
 
+### 1、下载和加载inception model
+- 因为是预训练好的模型，所以无需我们定义结构了
+- 导入包
+  - 这里 `inception`是别人实现好的下载的代码
+``` stylus
+import numpy as np
+import tensorflow as tf
+from matplotlib import pyplot as plt
+import inception # 第三方类加载inception model
+import os
+```
+- 下载和加载模型
+``` stylus
+'''下载和加载inception model'''
+inception.maybe_download()
+model = inception.Inception()
+```
+- 预测和显示图片函数
 
+``` stylus
+'''预测和显示图片'''
+def classify(image_path):
+    plt.imshow(plt.imread(image_path))
+    plt.show()
+    pred = model.classify(image_path=image_path)
+    model.print_scores(pred=pred, k=10, only_first_name=True)
+```
+- 显示调整后的图片
+  - 因为 `inception model`要求输入图片为 `299*299` 像素的，所以它会`resize`成这个大小然后作为输入
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+``` stylus
+'''显示处理后图片的样式'''
+def plot_resized_image(image_path):
+    resized_image = model.get_resized_image(image_path)
+    plt.imshow(resized_image, interpolation='nearest')
+    plt.show()
+plot_resized_image(image_path)
+```
 
 
 
@@ -1851,3 +1881,6 @@ def optimize(num_iterations):
   [24]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/CNNModel_EarlyStopping_Save_Restore/CNNModel_EarlyStopping_Save_Restore.py
   [25]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/Ensemble_Learning/ensemble_learning.py
   [26]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/Ensemble_Learning/CNN_for_CIFAR-10
+  [27]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/images/06_network_flowchart.png "06_network_flowchart"
+  [28]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/Inception_model/InceptionModel_pretrained.py
+  [29]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/images/07_inception_flowchart.png "07_inception_flowchart"
