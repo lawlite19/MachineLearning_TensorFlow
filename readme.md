@@ -1807,8 +1807,7 @@ def optimize(num_iterations):
 
 ## 十三、Inception model (GoogleNet)
 - [全部代码][28]
-- 使用`CIFAR-10`数据集
-- 创建了**两个网络**，一个用于训练，一个用于测试，测试使用的是训练好的权重参数，所以用到**参数重用**
+- 使用训练好的`inception model`,因为模型很复杂，一般的电脑运行不起来的。
 - 网络结构
 
 ![inception model(Google Net)][29]
@@ -1852,6 +1851,216 @@ def plot_resized_image(image_path):
 plot_resized_image(image_path)
 ```
 
+## 十四、迁移学习 Transfer Learning
+- [全部代码](30)
+- 网络结构还是使用上一节的`inception model`, 去掉最后的全连接层，然后重新构建全连接层进行训练
+  - 因为`inception model` 是训练好的，前面的卷积层用于捕捉**特征**, 而后面的全连接层可用于**分类**，所以我们**训练全连接层**即可
+- 因为要计算每张图片的`transfer values`,所以使用一个`cache`缓存`transfer-values`，第一次计算完成后，后面重新运行直接读取存储的结果，这样比较节省时间
+  - `transfer values`是`inception model`在`Softmax`层前一层的值
+  - `cifar-10`数据集, 我放在实验室电脑上运行了**几个小时**才得到`transfer values`，还是比较慢的
+- 总之最后相当于训练**下面**的神经网络，对应的 `transfer-values`作为输入
+![transfer learning-inception model][30]
+
+### 1、准备工作
+- 导入包
+``` stylus
+import numpy as np
+import tensorflow as tf
+import prettytensor as pt
+from matplotlib import pyplot as plt
+import time
+from datetime import timedelta
+import os
+import inception   # 第三方下载inception model的代码
+from inception import transfer_values_cache  # cache
+import cifar10     # 也是第三方的库，下载cifar-10数据集
+from cifar10 import num_classes
+```
+- 下载`cifar-10`数据集
+
+``` stylus
+'''下载cifar-10数据集'''
+cifar10.maybe_download_and_extract()
+class_names = cifar10.load_class_names()
+print("所有类别是：",class_names)
+'''训练和测试集'''
+images_train, cls_train, labels_train = cifar10.load_training_data()
+images_test,  cls_test,  labels_test  = cifar10.load_test_data()
+
+```
+- 下载和加载`inception model`
+
+``` stylus
+'''下载inception model'''
+inception.maybe_download()
+model = inception.Inception()
+```
+- 计算`cifar-10`训练集和测试集在`inception model`上的`transfer values`
+  - 因为计算非常耗时，这里第一次运行存储到本地，以后再运行直接读取即可
+  - `transfer values`的`shape`是`(dataset size, 2048)`，因为是`softmax`层的前一层
+``` stylus
+'''训练和测试的cache的路径'''
+file_path_cache_train = os.path.join(cifar10.data_path, 'inception_cifar10_train.pkl')
+file_path_cache_test = os.path.join(cifar10.data_path, 'inception_cifar10_test.pkl')
+
+print('处理训练集上的transfer-values.......... ')
+image_scaled = images_train * 255.0  # cifar-10的pixel是0-1的, shape=(50000, 32, 32, 3)
+transfer_values_train = transfer_values_cache(cache_path=file_path_cache_train,
+                                              images=image_scaled, 
+                                              model=model)  # shape=(50000, 2048)
+print('处理测试集上的transfer-values.......... ')
+images_scaled = images_test * 255.0
+transfer_values_test = transfer_values_cache(cache_path=file_path_cache_test,
+                                             model=model,
+                                             images=images_scaled)
+print("transfer_values_train: ",transfer_values_train.shape)
+print("transfer_values_test: ",transfer_values_test.shape)
+
+```
+- 可视化一张图片对应的`transfer values`
+
+``` stylus
+'''显示transfer values'''
+def plot_transfer_values(i):
+    print("输入图片：")
+    plt.imshow(images_test[i], interpolation='nearest')
+    plt.show()
+    print('transfer values --> 此图片在inception model上')
+    img = transfer_values_test[i]
+    img = img.reshape((32, 64))
+    plt.imshow(img, interpolation='nearest', cmap='Reds')
+    plt.show()
+plot_transfer_values(16)
+```
+### 2、分析`transfer values`
+#### (1) 使用PCA主成分分析
+- 将数据**降到2维**，可视化，因为`transfer values`是已经捕捉到的**特征**，所以可视化应该是可以隐约看到**不同类别的数据是有区别的**
+- 取`3000`个数据观察（因为`PCA`也是比较耗时的）
+
+``` stylus
+'''使用PCA分析transfer values'''
+from sklearn.decomposition import PCA
+pca = PCA(n_components=2)
+transfer_values = transfer_values_train[0:3000]  # 取3000个，大的话计算量太大
+cls = cls_train[0:3000]
+print(transfer_values.shape)
+transfer_values_reduced = pca.fit_transform(transfer_values)
+print(transfer_values_reduced.shape)
+```
+- 可视化降维后的数据
+
+``` stylus
+## 显示降维后的transfer values
+def plot_scatter(values, cls):
+    from matplotlib import cm as cm
+    cmap = cm.rainbow(np.linspace(0.0, 1.0, num_classes))
+    colors = cmap[cls]
+    x = values[:, 0]
+    y = values[:, 1]
+    plt.scatter(x, y, color=colors)
+    plt.show()
+plot_scatter(transfer_values_reduced, cls)
+```
+![pca 降维后可视化transfer values][31]
+
+#### (2) 使用TSNE主成分分析
+- 因为`t-SNE`运行非常慢，所以这里先用`PCA`将到**50维**
+
+``` stylus
+from sklearn.manifold import TSNE
+pca = PCA(n_components=50)
+transfer_values_50d = pca.fit_transform(transfer_values)
+tsne = TSNE(n_components=2)
+transfer_values_reduced = tsne.fit_transform(transfer_values_50d)
+print("最终降维后：", transfer_values_reduced.shape)
+plot_scatter(transfer_values_reduced, cls)
+```
+- 数据区分还是比较明显的
+![t-SNE降维后可视化transfer values][32]
+
+### 3、创建我们自己的网络
+- 使用`prettytensor`创建一个全连接层，使用`softmax`作为分类
+
+``` stylus
+'''创建网络'''
+transfer_len = model.transfer_len   # 获取transfer values的大小，这里是2048
+x = tf.placeholder(tf.float32, shape=[None, transfer_len], name="x")
+y_true = tf.placeholder(tf.float32, shape=[None, num_classes], name="y")
+y_true_cls = tf.argmax(y_true, axis=1)
+x_pretty = pt.wrap(x)
+with pt.defaults_scope(activation_fn=tf.nn.relu):
+    y_pred, loss = x_pretty.\
+        fully_connected(1024, name="layer_fc1").\
+        softmax_classifier(num_classes, labels=y_true)
+```
+- 优化器
+
+``` stylus
+'''优化器'''
+global_step = tf.Variable(initial_value=0, name="global_step", trainable=False)
+optimizer = tf.train.AdamOptimizer(0.0001).minimize(loss, global_step)
+
+```
+- 准确度
+
+``` stylus
+'''accuracy'''
+y_pred_cls = tf.argmax(y_pred, axis=1)
+correct_prediction = tf.equal(y_pred_cls, y_true_cls)
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+```
+- `SGD`训练
+
+``` stylus
+'''SGD 训练'''
+session = tf.Session()
+session.run(tf.initialize_all_variables())
+train_batch_size = 64
+def random_batch():
+    num_images = len(images_train)
+    idx = np.random.choice(num_images, 
+                           size=train_batch_size,
+                           replace=False)
+    x_batch = transfer_values_train[idx]
+    y_batch = labels_train[idx]
+    return x_batch, y_batch
+def optimize(num_iterations):
+    start_time = time.time()
+    for i in range(num_iterations):
+        x_batch, y_true_batch = random_batch()
+        feed_dict_train = {x: x_batch,
+                           y_true: y_true_batch}
+        i_global, _ = session.run([global_step, optimizer], feed_dict=feed_dict_train)
+        if (i_global % 100 == 0) or (i==num_iterations-1):
+            batch_acc = session.run(accuracy, feed_dict=feed_dict_train)
+            msg = "Global Step: {0:>6}, Training Batch Accuracy: {1:>6.1%}"
+            print(msg.format(i_global, batch_acc))            
+    end_time = time.time()
+    time_diff = end_time - start_time
+    print("耗时：", str(timedelta(seconds=int(round(time_diff)))))
+
+```
+
+- 使用`batch size`预测测试集数据
+
+``` stylus
+'''batch 预测'''
+batch_size = 256
+def predict_cls(transfer_values, labels, cls_true):
+    num_images = len(images_test)
+    cls_pred = np.zeros(shape=num_images, dtype=np.int)
+    i = 0
+    while i < num_images:
+        j = min(i + batch_size, num_images)
+        feed_dict = {x: transfer_values[i:j],
+                     y_true: labels[i:j]}
+        cls_pred[i:j] = session.run(y_pred_cls, feed_dict=feed_dict)
+        i = j
+    correct = (cls_true == cls_pred)
+    return correct, cls_pred
+```
+
 
 
 
@@ -1884,3 +2093,6 @@ plot_resized_image(image_path)
   [27]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/images/06_network_flowchart.png "06_network_flowchart"
   [28]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/Inception_model/InceptionModel_pretrained.py
   [29]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/images/07_inception_flowchart.png "07_inception_flowchart"
+  [30]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/images/08_transfer_learning_flowchart.png "08_transfer_learning_flowchart"
+  [31]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/images/08_transfer_learning_pca_visualize.png "08_transfer_learning_pca_visualize"
+  [32]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/images/08_transfer_learning_pca_visualize_02.png "08_transfer_learning_pca_visualize_02"

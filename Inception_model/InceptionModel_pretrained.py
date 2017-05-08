@@ -29,11 +29,11 @@ def classify(image_path):
 #image_path = os.path.join(inception.data_dir, 'parrot.jpg')
 #classify(image_path) 
 '''显示处理后图片的样式'''
-#def plot_resized_image(image_path):
-    #resized_image = model.get_resized_image(image_path)
-    #plt.imshow(resized_image, interpolation='nearest')
-    #plt.show()
-#plot_resized_image(image_path)
+def plot_resized_image(image_path):
+    resized_image = model.get_resized_image(image_path)
+    plt.imshow(resized_image, interpolation='nearest')
+    plt.show()
+plot_resized_image(image_path)
 
 '''金刚鹦鹉macaw  裁剪后的图片，看是否能预测正确'''
 #image_path = os.path.join(inception.data_dir, 'parrot_cropped1.jpg')
