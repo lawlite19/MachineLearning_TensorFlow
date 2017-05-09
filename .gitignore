@@ -1,3 +1,4 @@
 # ignore files.
 cifar-10-python.tar.gz
-
+inception_cifar10_train.pkl
+inception_cifar10_test.pkl
