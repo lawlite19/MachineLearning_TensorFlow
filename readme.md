@@ -2090,9 +2090,9 @@ def predict_cls(transfer_values, labels, cls_true):
   [24]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/CNNModel_EarlyStopping_Save_Restore/CNNModel_EarlyStopping_Save_Restore.py
   [25]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/Ensemble_Learning/ensemble_learning.py
   [26]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/Ensemble_Learning/CNN_for_CIFAR-10
-  [27]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/images/06_network_flowchart.png "06_network_flowchart"
+  [27]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/06_network_flowchart.png "06_network_flowchart"
   [28]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/Inception_model/InceptionModel_pretrained.py
-  [29]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/images/07_inception_flowchart.png "07_inception_flowchart"
-  [30]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/images/08_transfer_learning_flowchart.png "08_transfer_learning_flowchart"
-  [31]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/images/08_transfer_learning_pca_visualize.png "08_transfer_learning_pca_visualize"
-  [32]: https://github.com/lawlite19/MachineLearning_TensorFlow/blob/master/images/08_transfer_learning_pca_visualize_02.png "08_transfer_learning_pca_visualize_02"
+  [29]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/07_inception_flowchart.png "07_inception_flowchart"
+  [30]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/08_transfer_learning_flowchart.png "08_transfer_learning_flowchart"
+  [31]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/08_transfer_learning_pca_visualize.png "08_transfer_learning_pca_visualize"
+  [32]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/08_transfer_learning_pca_visualize_02.png "08_transfer_learning_pca_visualize_02"
