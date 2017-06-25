@@ -1,7 +1,9 @@
 TensorFlow
 ================
 ##  目录
+
 * [TensorFlow](#tensorflow)
+	* [目录](#目录)
 	* [一、TensorFlow介绍](#一-tensorflow介绍)
 		* [1、什么是TensorFlow](#1-什么是tensorflow)
 		* [2、TensorFlow强大之处](#2-tensorflow强大之处)
@@ -59,6 +61,30 @@ TensorFlow
 		* [1、保存模型](#1-保存模型)
 		* [2、Early Stopping](#2-early-stopping)
 		* [3、 小批量预测并计算准确率](#3-小批量预测并计算准确率)
+	* [十二：模型融合](#十二模型融合)
+		* [1、将测试集和验证集合并后，并重新划分](#1-将测试集和验证集合并后并重新划分)
+		* [2、融合模型](#2-融合模型)
+	* [十二：Cifar-10数据集，使用重复使用变量](#十二cifar-10数据集使用重复使用变量)
+		* [1、数据集](#1-数据集)
+		* [2、定义](#2-定义)
+		* [3、图片处理](#3-图片处理)
+		* [4、定义tensorflow计算图](#4-定义tensorflow计算图)
+		* [5、获取权重和每层的输出值信息](#5-获取权重和每层的输出值信息)
+		* [6、保存和加载计算图参数](#6-保存和加载计算图参数)
+		* [7、训练](#7-训练)
+	* [十三、Inception model (GoogleNet)](#十三-inception-model-googlenet)
+		* [1、下载和加载inception model](#1-下载和加载inception-model)
+	* [十四、迁移学习 Transfer Learning](#十四-迁移学习-transfer-learning)
+		* [1、准备工作](#1-准备工作)
+		* [2、分析](#2-分析)
+			* [(1) 使用PCA主成分分析](#1-使用pca主成分分析)
+			* [(2) 使用TSNE主成分分析](#2-使用tsne主成分分析)
+		* [3、创建我们自己的网络](#3-创建我们自己的网络)
+* [RNN循环神经网络](#rnn循环神经网络)
+	* [一、实现MNIST分类](#一-实现mnist分类)
+		* [1、说明](#1-说明)
+		* [2、实现](#2-实现)
+		* [3、运行结果](#3-运行结果)
 
 ## 一、TensorFlow介绍
 
@@ -2062,6 +2088,150 @@ def predict_cls(transfer_values, labels, cls_true):
 ```
 
 
+RNN循环神经网络
+===============================================
+- 开启新篇章，以下内容为`RNN`相关内容
+- 关于`RNN`的基本内容可以查看我的博客：[点击查看][33]
+
+## 一、实现MNIST分类
+### 1、说明
+- 关于`RNN`的基本内容参考我的博客：[点击查看][34]
+- 使用`MNIST`数据集，全部代码：[点击查看][35]
+- 为什么可以使用`RNN`来进行分类，我们可以认为像素是有关联的
+- 图片的大小是`28x28`的，每一行看作一个输入，共有`28`列，所以`n_steps=28`看完一张图片
+- 所以输入的维度是`(batch_size, n_steps, n_inputs)`，输出就是`(batch_size, n_classes)`
+### 2、实现
+- 加载数据，声明超参数
+  - `state_size`是`cell`中的神经元个数
+  - `n_steps`截断梯度的步数，也就是学习多少步的依赖
+``` stylus
+print("tensorflow版本", tf.__version__)
+'''读取数据'''
+mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
+print("size of")
+print('--training set:\t\t{}'.format(len(mnist.train.labels)))
+print('--test set:\t\t\t{}'.format(len(mnist.test.labels)))
+print('--validation set:\t{}'.format(len(mnist.validation.labels)))
+'''定义超参数'''
+learning_rate = 0.001
+batch_size = 128
+n_inputs = 28
+n_steps = 28
+state_size = 128
+n_classes = 10
+```
+- 定义输入`placeholder`和权重，偏置
+  - 这里的**输入**权重和`biases`是不用定义的，因为`cell`中会计算
+``` stylus
+'''定义placehoder和初始化weights和biases'''
+x = tf.placeholder(tf.float32, [batch_size, n_steps, n_inputs], name='x')
+y = tf.placeholder(tf.float32, [batch_size, n_classes], name='y')
+weights = {
+    # (28, 128)
+    #'in': tf.Variable(initial_value=tf.random_normal([n_inputs, state_size])),
+    # (128, 10)
+    'out': tf.Variable(tf.random_normal(shape=[state_size, n_classes], mean=0.0, stddev=1.0, 
+                                       dtype=tf.float32, 
+                                       seed=None, 
+                                       name=None))
+}
+biases = {
+    # (128, )
+    #'in': tf.Variable(initial_value=tf.constant(0.1,shape=[state_size,]), trainable=True, collections=None, 
+                     #validate_shape=True, 
+                     #caching_device=None, name=None, 
+                     #variable_def=None, dtype=None, 
+                     #expected_shape=None, 
+                     #import_scope=None),
+    # (10, )
+    'out': tf.Variable(initial_value=tf.constant(0.1, shape=[n_classes, ]), trainable=True, collections=None, 
+                      validate_shape=True, 
+                      caching_device=None, name=None, 
+                      variable_def=None, dtype=None, 
+                      expected_shape=None, 
+                      import_scope=None)
+}
+```
+
+- RNN的cell
+  - 使用`LSTM`和`dynamic_rnn`的方式，关于`dynamic_rnn`不了解的还是请看我的博客
+  - 返回`rnn`的输出
+  - 经过`n_steps=28`遍历一张图片之后得到预测值，所以最后只需要最后一个的输出`final_state`来做最后的预测
+    - `final_state[1]`就是`LSTM`的`h state`，就是对应的输出
+``` stylus
+'''定义RNN 结构'''
+def RNN(X, weights, biases):
+    '''这里输入X 不用再做权重的运算，cell中会自动运算（_linear函数）, 做了运算也没有实际意义，因为LSTM的cell输入的流向有多个'''
+    # 原始的 X 是 3 维数据, 我们需要把它变成 2 维数据才能使用 weights 的矩阵乘法
+    # X ==> (128 batch_size * 28 steps, 28 inputs)
+    #X = tf.reshape(X, [-1, n_inputs])
+    #X_in = tf.matmul(X, weights['in']) + biases['in']
+    #  再换回3维
+    # X_in ==> (128 batches, 28 steps, 128 hidden)
+    #X_in = tf.reshape(X_in, shape=[-1, n_steps, state_size])
+    '''cell中的计算方式1'''
+    cell = tf.nn.rnn_cell.BasicLSTMCell(num_units=state_size)
+    init_state = cell.zero_state(batch_size, dtype=tf.float32)
+    rnn_outputs, final_state = tf.nn.dynamic_rnn(cell=cell,
+                                                 inputs=X,
+                                                 initial_state=init_state,
+                                                 time_major=False)
+    results = tf.matmul(final_state[1], weights['out']) + biases['out']
+    return results
+```
+- 预测，损失和优化器
+
+``` stylus
+prediction = RNN(x, weights, biases)
+losses = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction,
+                                                                labels=y))
+train_step = tf.train.AdamOptimizer(learning_rate).minimize(losses)
+prediction_cls = tf.argmax(prediction, axis=1)
+correct_pred = tf.equal(prediction_cls, tf.argmax(y, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+
+```
+
+- 训练
+
+``` stylus
+def optimize(n_epochs):
+    '''训练RNN'''
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        for i in range(n_epochs):
+            batch_x, batch_y = mnist.train.next_batch(batch_size)
+            batch_x = batch_x.reshape([batch_size, n_steps, n_inputs])
+            feed_dict = {x: batch_x, y: batch_y}
+            sess.run(train_step, feed_dict=feed_dict)
+            if i % 50 == 0:
+                print("epoch: {0}, accuracy:{1}".format(i, sess.run(accuracy, feed_dict=feed_dict)))
+```
+
+### 3、运行结果
+- 简单的在测试集上的准确率
+``` stylus
+epoch: 0, accuracy:0.1796875
+epoch: 50, accuracy:0.7109375
+epoch: 100, accuracy:0.828125
+epoch: 150, accuracy:0.8359375
+epoch: 200, accuracy:0.8984375
+epoch: 250, accuracy:0.9296875
+epoch: 300, accuracy:0.9375
+epoch: 350, accuracy:0.921875
+epoch: 400, accuracy:0.9609375
+epoch: 450, accuracy:0.953125
+epoch: 500, accuracy:0.921875
+epoch: 550, accuracy:0.9296875
+epoch: 600, accuracy:0.9609375
+epoch: 650, accuracy:0.9375
+epoch: 700, accuracy:0.9765625
+epoch: 750, accuracy:0.96875
+epoch: 800, accuracy:0.9375
+epoch: 850, accuracy:0.9296875
+epoch: 900, accuracy:0.9609375
+epoch: 950, accuracy:0.96875
+```
 
 
   [1]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/tensors_flowing.gif "tensors_flowing.gif"
@@ -2096,3 +2266,6 @@ def predict_cls(transfer_values, labels, cls_true):
   [30]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/08_transfer_learning_flowchart.png "08_transfer_learning_flowchart"
   [31]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/08_transfer_learning_pca_visualize.png "08_transfer_learning_pca_visualize"
   [32]: https://raw.githubusercontent.com/lawlite19/MachineLearning_TensorFlow/master/images/08_transfer_learning_pca_visualize_02.png "08_transfer_learning_pca_visualize_02"
+  [33]: http://lawlite.me/tags/RNN/
+  [34]: http://lawlite.me/tags/RNN/
+  [35]: https://github.com/lawlite19/MachineLearning_TensorFlow/tree/master/RNN_mnist/RNN.py
